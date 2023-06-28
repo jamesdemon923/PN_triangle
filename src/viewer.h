@@ -1,4 +1,3 @@
-
 #pragma once
 
 #include <iostream>
@@ -69,8 +68,9 @@ private:
     GLuint tessModelMatrixID;
     GLuint tessViewMatrixID;
     GLuint tessProjectionMatrixID;
-    GLfloat tessellationLevelInnerID;
-    GLfloat tessellationLevelOuterID;
+    GLfloat tessellationLevelID;
+    //GLfloat tessellationLevelInnerID;
+    //GLfloat tessellationLevelOuterID;
 
 public:
     Viewer() = delete;

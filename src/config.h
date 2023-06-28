@@ -15,8 +15,9 @@ struct RenderSetting
     int  width = 1280;
     int  height = 720;
     bool enableTess{false};
-    glm::vec4 outerTessLevel{2.f};
-    glm::vec3 innerTessLevel{1.f};
+    float TessLevel = 1.0;
+    //glm::vec4 outerTessLevel{1.f};
+    //glm::vec3 innerTessLevel{1.f};
 };
 
 struct DisplayOption

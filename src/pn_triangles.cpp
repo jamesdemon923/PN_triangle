@@ -14,9 +14,7 @@ int main(int argc, char **argv)
     {
         if (i + 1 < argc && strcmp(argv[i], "-obj") == 0)
             filename = argv + i + 1, ++i;
-        else
-        {
-        }
+
     }
 
     if ( filename != nullptr )
@@ -25,7 +23,7 @@ int main(int argc, char **argv)
     }
     else
     {
-        modelPath = "Model/bunny.obj";
+        modelPath = "Model/octahedron.obj";
     }
 
     Viewer viewer{"Viewer", 1280, 720};

@@ -41,8 +41,7 @@ void glfwindow_key_cb(GLFWwindow *window, int key, int scancode, int action, int
         case GLFW_KEY_T:
         {
             setting.enableTess = !setting.enableTess;
-            setting.innerTessLevel = { 1.f, 1.f, 1.f };
-            setting.outerTessLevel = { 1.f, 1.f, 1.f, 1.f };
+            setting.TessLevel = 1.0;
 
             break;
         }
@@ -55,14 +54,7 @@ void glfwindow_key_cb(GLFWwindow *window, int key, int scancode, int action, int
         {
             if (setting.enableTess)
             {
-                setting.innerTessLevel.x--;
-                setting.innerTessLevel.y--;
-                setting.innerTessLevel.z--;
-
-                setting.outerTessLevel.x--;
-                setting.outerTessLevel.y--;
-                setting.outerTessLevel.z--;
-                setting.outerTessLevel.w--;
+                setting.TessLevel--;
             }
             break;
         }
@@ -70,14 +62,7 @@ void glfwindow_key_cb(GLFWwindow *window, int key, int scancode, int action, int
         {
             if (setting.enableTess)
             {
-                setting.innerTessLevel.x++;
-                setting.innerTessLevel.y++;
-                setting.innerTessLevel.z++;
-
-                setting.outerTessLevel.x++;
-                setting.outerTessLevel.y++;
-                setting.outerTessLevel.z++;
-                setting.outerTessLevel.w++;
+                setting.TessLevel++;
             }
             break;
         }

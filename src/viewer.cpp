@@ -17,6 +17,9 @@
 #include "event_handler.h" 
 #include "gui.h"
 
+#include <chrono>
+#include <thread>
+
 float myRandom();
 
 void drawOverlay(const Viewer &viewer);
@@ -44,28 +47,21 @@ void Viewer::Run()
     GUI::CleanUp();
 }
 
+std::chrono::steady_clock::time_point awake_time();
+
 void Viewer::animateTessellation()
 {
     if (!m_enable_tess_anim || !m_setting.enableTess || m_frame_num % 10 != 0) return;
 
-    const int maxInnerLevel = 4;
-    const int maxOuterLevel = 6;
+    const int maxLevel = 6;
 
-    m_setting.outerTessLevel.x++;
-    m_setting.outerTessLevel.y++;
-    m_setting.outerTessLevel.z++;
-    if (m_setting.outerTessLevel.x > maxOuterLevel)
-    {
-        m_setting.innerTessLevel.x++;
+    m_setting.TessLevel++;
 
-        m_setting.outerTessLevel.x = 1;
-        m_setting.outerTessLevel.y = 1;
-        m_setting.outerTessLevel.z = 1;
-        if (m_setting.innerTessLevel.x > maxInnerLevel)
-            m_setting.innerTessLevel.x = 1;
+    if (m_setting.TessLevel > maxLevel) {
+        m_setting.TessLevel = 1;
     }
 
-    //std::this_thread::sleep_until(awake_time());
+    std::this_thread::sleep_until(awake_time());
 }
 
 void Viewer::animateCamera(Camera &camera)
@@ -160,11 +156,7 @@ void Viewer::render(const MeshBin & m_meshBin, const Camera &m_camera)
                 glUniformMatrix4fv(tessProjectionMatrixID, 1, GL_FALSE, &gProjectionMatrix[0][0]);
                 glUniformMatrix4fv(tessModelMatrixID, 1, GL_FALSE, &modelMatrix[0][0]);
 
-                glUniform1f(tessellationLevelInnerID, m_setting.innerTessLevel.x); //< fix shader code latter
-                glUniform1f(tessellationLevelOuterID, m_setting.outerTessLevel.x);
-
-                //glUniform2f(tessellationLevelInnerID, m_setting.innerTessLevel.x, m_setting.innerTessLevel.y); //< fix shader code latter
-                //glUniform3f(tessellationLevelOuterID, m_setting.outerTessLevel.x, m_setting.innerTessLevel.y, m_setting.innerTessLevel.z);
+                glUniform1f(tessellationLevelID, m_setting.TessLevel); 
 
                 glPatchParameteri(GL_PATCH_VERTICES, 3);
                 glBindVertexArray( m_meshBin.vao(i) );
@@ -210,8 +202,8 @@ void Viewer::initOpenGLShaders()
     tessViewMatrixID = glGetUniformLocation(tessProgramID, "V");
     tessProjectionMatrixID = glGetUniformLocation(tessProgramID, "P");
     tessLightID = glGetUniformLocation(tessProgramID, "lightPosition_worldspace");
-    tessellationLevelInnerID = glGetUniformLocation(tessProgramID, "tessellationLevelInner");
-    tessellationLevelOuterID = glGetUniformLocation(tessProgramID, "tessellationLevelOuter");
+
+    tessellationLevelID = glGetUniformLocation(tessProgramID, "tessellationLevel");
 
     tess_mesh_color_ID = glGetUniformLocation(tessProgramID, "mesh_color");
 
@@ -352,8 +344,7 @@ static void drawUI(Viewer &viewer)
             ImGui::Checkbox("Enable Tessellation",  &setting.enableTess);
             ImGui::Checkbox("Enable Tessellation Animation",  &viewer.m_enable_tess_anim);
             ImGui::Separator();
-            changed |= ImGui::SliderFloat4("outer Tess Level", &setting.outerTessLevel.x, 1, 64);
-            changed |= ImGui::SliderFloat4("Inner Tess Level", &setting.innerTessLevel.x, 1, 64);
+            changed |= ImGui::SliderFloat("Tess Level", &setting.TessLevel, 1, 64);
             if (changed)
             {
                 printf("Tessellation level changed.\n");
@@ -382,8 +373,7 @@ static void drawOverlay(const Viewer &viewer)
         ImGui::Text("Toggle UI display with key [ x | X ]");
         ImGui::Text("Renderer : %s", glGetString(GL_RENDERER));
         ImGui::Text("OpenGL version : %s", glGetString(GL_VERSION));
-        ImGui::Text("outer level : %.2f, %.2f, %.2f, %.2f", setting.outerTessLevel.x, setting.outerTessLevel.y, setting.outerTessLevel.z, setting.outerTessLevel.w);
-        ImGui::Text("inner level : %.2f, %.2f, %.2f", setting.innerTessLevel.x, setting.innerTessLevel.y, setting.innerTessLevel.z);
+        ImGui::Text("Tesse level : %.2f", setting.TessLevel);
         ImGui::Text("fps : %.2f fps", ImGui::GetIO().Framerate);
         ImGui::End();
     }
@@ -410,10 +400,7 @@ static float myRandom()
 ///// Timing 
 /////
 ///////////////////////////////////////////////////////////////////////////////////////
-#include <chrono>
-#include <thread>
-
-auto awake_time()
+std::chrono::steady_clock::time_point awake_time()
 {
     auto now = []() { return std::chrono::steady_clock::now(); };
     using std::chrono::operator""ms;

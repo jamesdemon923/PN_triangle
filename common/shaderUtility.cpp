@@ -106,7 +106,9 @@ GLuint loadTessShaders(const char *tess_vert_file_path, const char *tess_ctrl_fi
 	GLuint tessVertShaderID = glCreateShader(GL_VERTEX_SHADER);
 	GLuint tessCtrlShaderID = glCreateShader(GL_TESS_CONTROL_SHADER);
 	GLuint tessEvalShaderID = glCreateShader(GL_TESS_EVALUATION_SHADER);
+    //GLuint tessGeoShaderID = glCreateShader(GL_GEOMETRY_SHADER);
 	GLuint tessFragShaderID = glCreateShader(GL_FRAGMENT_SHADER);
+
 
 	std::string tessVertexShaderCode;
 	std::ifstream tessVertexShaderStream(tess_vert_file_path, std::ios::in);
@@ -175,6 +177,7 @@ GLuint loadTessShaders(const char *tess_vert_file_path, const char *tess_ctrl_fi
         Err(std::string("Couldn't open ") + tess_frag_file_path);
         exit(1);
 	}
+
 
 	GLint result = false;
 	int infoLogLength;
@@ -255,7 +258,7 @@ GLuint loadTessShaders(const char *tess_vert_file_path, const char *tess_ctrl_fi
 	glDeleteShader(tessVertShaderID);
 	glDeleteShader(tessCtrlShaderID);
 	glDeleteShader(tessEvalShaderID);
-	glDeleteShader(tessFragShaderID);
+    glDeleteShader(tessFragShaderID);
 
 	return tessProgramID;
 }
