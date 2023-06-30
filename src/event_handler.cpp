@@ -50,6 +50,18 @@ void glfwindow_key_cb(GLFWwindow *window, int key, int scancode, int action, int
             option.wireframe = !option.wireframe;
             break;
         }
+        case GLFW_KEY_S:
+        {
+            setting.enableSilhou = !setting.enableSilhou;
+
+            break;
+        }
+        case GLFW_KEY_R:
+        {
+            Camera& camera = *reinterpret_cast<Camera*>(cb->pCamera);
+            camera.reset();
+            break;
+        }
         case GLFW_KEY_LEFT_BRACKET:
         {
             if (setting.enableTess)
@@ -142,7 +154,7 @@ static void mouseDragRight(GLFWwindow *window, const glm::ivec2  &where, const g
     const glm::vec2 fraction = glm::vec2(delta) / glm::vec2(getWindowSize(window));
     float scale = std::fabs(fraction.x) > std::fabs(fraction.y) ? fraction.x : fraction.y;
     camera.zoom(scale);
-    printf("zoom in / out : %.4f\n", scale);
+    // printf("zoom in / out : %.4f\n", scale);
 }
 
 /*! callback for _moving_ the mouse to a new position */

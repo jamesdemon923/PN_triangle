@@ -15,6 +15,7 @@ struct RenderSetting
     int  width = 1280;
     int  height = 720;
     bool enableTess{false};
+    bool enableSilhou{false};
     float TessLevel = 1.0;
     //glm::vec4 outerTessLevel{1.f};
     //glm::vec3 innerTessLevel{1.f};

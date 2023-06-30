@@ -30,6 +30,7 @@ public:
     void rotate(glm::vec2 delta);
     void zoom(float delta);
     void pan(glm::vec2 delta);
+    void reset();
 
     void setAxis(OrbitAxis axis);
 
@@ -68,6 +69,11 @@ protected:
     float m_aspect{1280.f / 720.f};
     float m_zNear{0.001f};
     float m_zFar{100.f};
+
+    // Initial settings
+    glm::vec3 m_initial_at;
+    float m_initial_distance;
+    glm::vec2 m_initial_azel;
 
 public:
 

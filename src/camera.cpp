@@ -68,7 +68,7 @@ static float maintainUnitCircle(float inDegrees)
 ////////////////////////// Class Camera definitions //////////////////////////////////
 
 Camera::Camera(glm::vec3 at, float dist, glm::vec2 azel)
-    : m_at(at), m_distance(dist), m_azel(azel)
+    : m_at(at), m_distance(dist), m_azel(azel), m_initial_at(at), m_initial_distance(dist), m_initial_azel(azel)
 {
   m_speed = m_distance; // longer, faster
   update();
@@ -114,6 +114,13 @@ void Camera::setAxis(OrbitAxis axis)
 {
   m_axis = axis;
   update();
+}
+
+void Camera::reset() {
+    m_at = m_initial_at;
+    m_distance = m_initial_distance;
+    m_azel = m_initial_azel;
+    update();
 }
 
 glm::vec2 Camera::azel() const

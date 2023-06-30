@@ -83,8 +83,8 @@ void main()
 		+ b021 * 3. * u2 * v + b102 * 3. * w * v2 + b012 * 3. * u * v2
 		+ b012 * 6. * w * u * v;
 
-    tedata.position = pos;
 
+    tedata.position = pos;
 
     vec3 n200 = pnPatch.n200;
     vec3 n020 = pnPatch.n020;

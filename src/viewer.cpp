@@ -143,8 +143,13 @@ void Viewer::render(const MeshBin & m_meshBin, const Camera &m_camera)
             glUniformMatrix4fv(projectionMatrixID, 1, GL_FALSE, &gProjectionMatrix[0][0]);
             glUniformMatrix4fv(modelMatrixID, 1, GL_FALSE, &modelMatrix[0][0]);
 
-            glBindVertexArray( m_meshBin.vao(i) );
-            glDrawArrays( GL_TRIANGLES, 0, m_meshBin.vertex_num(i) );
+            glBindVertexArray(m_meshBin.vao(i));
+            glDrawArrays(GL_TRIANGLES, 0, m_meshBin.vertex_num(i));
+
+            if (m_setting.enableSilhou)
+            {
+
+            }
         }
         else
         {
@@ -156,11 +161,17 @@ void Viewer::render(const MeshBin & m_meshBin, const Camera &m_camera)
                 glUniformMatrix4fv(tessProjectionMatrixID, 1, GL_FALSE, &gProjectionMatrix[0][0]);
                 glUniformMatrix4fv(tessModelMatrixID, 1, GL_FALSE, &modelMatrix[0][0]);
 
-                glUniform1f(tessellationLevelID, m_setting.TessLevel); 
+                glUniform1f(tessellationLevelID, m_setting.TessLevel);
 
                 glPatchParameteri(GL_PATCH_VERTICES, 3);
-                glBindVertexArray( m_meshBin.vao(i) );
-                glDrawArrays( GL_PATCHES, 0, m_meshBin.vertex_num(i) );
+                glBindVertexArray(m_meshBin.vao(i));
+                glDrawArrays(GL_PATCHES, 0, m_meshBin.vertex_num(i));
+
+                if (m_setting.enableSilhou)
+                {
+
+                }
+
             }
         }
     }
@@ -343,6 +354,7 @@ static void drawUI(Viewer &viewer)
             bool changed = false;
             ImGui::Checkbox("Enable Tessellation",  &setting.enableTess);
             ImGui::Checkbox("Enable Tessellation Animation",  &viewer.m_enable_tess_anim);
+            ImGui::Checkbox("Show Silhouette", &setting.enableSilhou);
             ImGui::Separator();
             changed |= ImGui::SliderFloat("Tess Level", &setting.TessLevel, 1, 64);
             if (changed)
