@@ -61,6 +61,7 @@ void main()
     vec3 b012 = pnPatch.b012;
     vec3 b102 = pnPatch.b102;
     vec3 b201 = pnPatch.b201;
+    vec3 b111 = pnPatch.b111;
 
 
     //< The built-in input variable vec3 gl_TessCoord, which comes from tessellator
@@ -81,7 +82,7 @@ void main()
     vec3 pos = b300 * w3 + b030 * u3 + b003 * v3
 		+ b210 * 3. * w2 * u + b120 * 3. * w * u2 + b201 * 3. * w2 * v
 		+ b021 * 3. * u2 * v + b102 * 3. * w * v2 + b012 * 3. * u * v2
-		+ b012 * 6. * w * u * v;
+		+ b111 * 6. * w * u * v;
 
 
     tedata.position = pos;

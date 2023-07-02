@@ -3,7 +3,7 @@
 #include <string>
 #include <sstream>
 #include <cstring>
-
+#include <iostream>
 
 #define TINYOBJLOADER_IMPLEMENTATION
 #include <tiny_obj_loader.h>
@@ -145,10 +145,11 @@ static AABB load_obj(const std::string &filename, const std::string &base_dir, s
                 {
                         attrib.vertices[3 * index.vertex_index + 0],
                         attrib.vertices[3 * index.vertex_index + 1],
-                        attrib.vertices[3 * index.vertex_index + 2]
+                        attrib.vertices[3 * index.vertex_index + 2],
+                        1.0f
                 };
-                pmin = glm::min(vert.position, pmin);
-                pmax = glm::max(vert.position, pmax);
+                pmin = glm::min(glm::vec3(vert.position), pmin);
+                pmax = glm::max(glm::vec3(vert.position), pmax);
                 if (~index.normal_index) //< -1 == 0xFFFFFFFF, it is equal to if (index.normal_index != -1)
                 {
 
@@ -228,11 +229,15 @@ static AABB load_obj(const std::string &filename, const std::string &base_dir, s
             glBindBuffer(GL_ARRAY_BUFFER, m_vbo_id[m_object_num]);
             glBufferData(GL_ARRAY_BUFFER, m_vb_size[m_object_num], m_meshes[i].vertices.data(), GL_STATIC_DRAW);
 
-            glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, vertexStride, 0);
-            glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, vertexStride, (GLvoid*)normalOffset);
+            glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, vertexStride, 0); // Position
+            glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, vertexStride, (GLvoid*)normalOffset); // Normal
 
             glEnableVertexAttribArray(0);
             glEnableVertexAttribArray(1);
+
+            for (const auto& vertex : m_meshes[i].vertices) {
+                std::cout << "Normal: (" << vertex.normal.x << ", " << vertex.normal.y << ", " << vertex.normal.z << ")" << std::endl;
+            }
 
             glBindVertexArray(0);
 
@@ -244,3 +249,5 @@ static AABB load_obj(const std::string &filename, const std::string &base_dir, s
             m_object_num++;
         }
     }
+
+

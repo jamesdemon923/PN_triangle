@@ -42,12 +42,6 @@ in V2T vdata[];
 
 patch out PnPatch pnPatch;
 
-//< weighting
-float wij(int i, int j, vec3 P[3], vec3 N[3])
-{
- 	return dot(P[j] - P[i], N[i]);
-}
-
 float vij(int i, int j, vec3 P[3], vec3 N[3])
 {
 	vec3 Pj_minus_Pi = P[j] - P[i];
@@ -64,29 +58,33 @@ void main()
     pnPatch.b003 = P[2] = vdata[2].position;
 
     vec3 N[3];
+
     pnPatch.n200 = N[0] = normalize(vdata[0].normal);
     pnPatch.n020 = N[1] = normalize(vdata[1].normal);
     pnPatch.n002 = N[2] = normalize(vdata[2].normal);
 
-
     //< calculate control points
 
     //< tangent control points
-	pnPatch.b210 = (2.0*P[0] + P[1] - wij(0, 1, P, N)*N[0])/3.0;
-	pnPatch.b120 = (2.0*P[1] + P[0] - wij(1, 0, P, N)*N[1])/3.0;
-	pnPatch.b021 = (2.0*P[1] + P[2] - wij(1, 2, P, N)*N[1])/3.0;
-	pnPatch.b012 = (2.0*P[2] + P[1] - wij(2, 1, P, N)*N[2])/3.0;
-	pnPatch.b102 = (2.0*P[2] + P[0] - wij(2, 0, P, N)*N[2])/3.0;
-	pnPatch.b201 = (2.0*P[0] + P[2] - wij(0, 2, P, N)*N[0])/3.0;
+    pnPatch.b210 = (2.0*P[0] + P[1] - dot(P[1] - P[0], N[0]) * N[0])/3.0;
+    pnPatch.b120 = (2.0*P[1] + P[0] - dot(P[0] - P[1], N[1]) * N[1])/3.0;
+    pnPatch.b021 = (2.0*P[1] + P[2] - dot(P[2] - P[1], N[1]) * N[1])/3.0;
+    pnPatch.b012 = (2.0*P[2] + P[1] - dot(P[1] - P[2], N[2]) * N[2])/3.0;
+    pnPatch.b102 = (2.0*P[2] + P[0] - dot(P[0] - P[2], N[2]) * N[2])/3.0;
+    pnPatch.b201 = (2.0*P[0] + P[2] - dot(P[2] - P[0], N[0]) * N[0])/3.0;
 
+    //pnPatch.b210 = (2.0 * P[0] + P[1]) / 3.0;
+    //pnPatch.b120 = (2.0 * P[1] + P[0]) / 3.0;
+    //pnPatch.b021 = (2.0 * P[1] + P[2]) / 3.0;
+    //pnPatch.b012 = (2.0 * P[2] + P[1]) / 3.0;
+    //pnPatch.b102 = (2.0 * P[2] + P[0]) / 3.0;
+    //pnPatch.b201 = (2.0 * P[0] + P[2]) / 3.0;
 
 	vec3 E = (pnPatch.b210 + pnPatch.b120 + pnPatch.b021 + pnPatch.b012 + pnPatch.b102 + pnPatch.b201)/6.0;
 	vec3 V = (P[0] + P[1] + P[2])/3.0;
     pnPatch.b111 = E + (E - V)*0.5;
 
-
     //< calculate normal
-
 	pnPatch.n110 = normalize(N[0] + N[1] - vij(0, 1, P, N) * (P[1] - P[0]));
 	pnPatch.n011 = normalize(N[1] + N[2] - vij(1, 2, P, N) * (P[2] - P[1]));
 	pnPatch.n101 = normalize(N[2] + N[0] - vij(2, 0, P, N) * (P[0] - P[2]));
@@ -95,6 +93,7 @@ void main()
     pnPatch.c100 = vdata[0].color;
 	pnPatch.c010 = vdata[1].color;
 	pnPatch.c001 = vdata[2].color;
+
 
     /*
         - The interpretation of tessellation level depends on the abstract patch type, but the general idea is this:
