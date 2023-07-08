@@ -18,6 +18,5 @@ void main()
 {
     vdata.position = (vertexPosition_modelspace).xyz;
     vdata.normal = normalize(vertexNormal_modelspace);
-    //vdata.color = vec4(mesh_color, 1.0f);
-    vdata.color = vec4(vertexNormal_modelspace, 1.0f);
+    vdata.color = vec4(mesh_color, 1.0f);
 }

@@ -59,11 +59,34 @@ void main()
 
     vec3 N[3];
 
-    pnPatch.n200 = N[0] = normalize(vdata[0].normal);
-    pnPatch.n020 = N[1] = normalize(vdata[1].normal);
-    pnPatch.n002 = N[2] = normalize(vdata[2].normal);
+    pnPatch.n200 = N[0] = vdata[0].normal;
+    pnPatch.n020 = N[1] = vdata[1].normal;
+    pnPatch.n002 = N[2] = vdata[2].normal;
 
     //< calculate control points
+
+    /*
+    // tester
+    // vec3 test1 = dot(P[1] - P[0], N[0]) * N[0]; 
+    // dot(P[1] - P[0], N[0]) is 0, since the normal is orthogonal to the triangle
+
+    // vec3 test2 = N[1] - N[0];
+    // N[0] = N[1] = N[2], flat shading
+
+    if (length(test) < 0.0001) {
+        N[0] = vdata[0].position;
+        N[1] = vdata[1].position;
+        N[2] = vdata[2].position;
+    }
+
+    //pnPatch.b210 = (2.0 * P[0] + P[1]) / 3.0;
+    //pnPatch.b120 = (2.0 * P[1] + P[0]) / 3.0;
+    //pnPatch.b021 = (2.0 * P[1] + P[2]) / 3.0;
+    //pnPatch.b012 = (2.0 * P[2] + P[1]) / 3.0;
+    //pnPatch.b102 = (2.0 * P[2] + P[0]) / 3.0;
+    //pnPatch.b201 = (2.0 * P[0] + P[2]) / 3.0;
+
+    */
 
     //< tangent control points
     pnPatch.b210 = (2.0*P[0] + P[1] - dot(P[1] - P[0], N[0]) * N[0])/3.0;
@@ -72,13 +95,6 @@ void main()
     pnPatch.b012 = (2.0*P[2] + P[1] - dot(P[1] - P[2], N[2]) * N[2])/3.0;
     pnPatch.b102 = (2.0*P[2] + P[0] - dot(P[0] - P[2], N[2]) * N[2])/3.0;
     pnPatch.b201 = (2.0*P[0] + P[2] - dot(P[2] - P[0], N[0]) * N[0])/3.0;
-
-    //pnPatch.b210 = (2.0 * P[0] + P[1]) / 3.0;
-    //pnPatch.b120 = (2.0 * P[1] + P[0]) / 3.0;
-    //pnPatch.b021 = (2.0 * P[1] + P[2]) / 3.0;
-    //pnPatch.b012 = (2.0 * P[2] + P[1]) / 3.0;
-    //pnPatch.b102 = (2.0 * P[2] + P[0]) / 3.0;
-    //pnPatch.b201 = (2.0 * P[0] + P[2]) / 3.0;
 
 	vec3 E = (pnPatch.b210 + pnPatch.b120 + pnPatch.b021 + pnPatch.b012 + pnPatch.b102 + pnPatch.b201)/6.0;
 	vec3 V = (P[0] + P[1] + P[2])/3.0;
@@ -105,6 +121,7 @@ void main()
         - The effective tessellation levels = function{ value here, spacing policy }
 
     */
+
 	gl_TessLevelInner[0] = tessellationLevel;
 	gl_TessLevelOuter[0] = tessellationLevel;
 	gl_TessLevelOuter[1] = tessellationLevel;

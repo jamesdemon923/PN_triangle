@@ -11,6 +11,7 @@
 #include "objloader.h"
 
 
+
 bool loadQuadOBJ(const char * path, std::vector<glm::vec3> &out_vertices, std::vector<glm::vec3> &out_normals)
 {
     printf("Loading OBJ file with quads %s...\n", path);
@@ -19,6 +20,8 @@ bool loadQuadOBJ(const char * path, std::vector<glm::vec3> &out_vertices, std::v
     std::vector<glm::vec3> temp_vertices;
     std::vector<glm::vec3> temp_normals;
 
+    // Additional data structure for storing the adjacency information
+    std::map<int, std::vector<glm::vec3>> vertex_to_normals;
 
     FILE * file = fopen(path, "r");
     if( file == NULL ){
@@ -54,14 +57,22 @@ bool loadQuadOBJ(const char * path, std::vector<glm::vec3> &out_vertices, std::v
                 printf("File can't be read by our simple parser :-( Try exporting with other options. See the definition of the loadOBJ fuction.\n");
                 return false;
             }
-            vertexIndices.push_back(vertexIndex[0]);
-            vertexIndices.push_back(vertexIndex[1]);
-            vertexIndices.push_back(vertexIndex[2]);
-            vertexIndices.push_back(vertexIndex[3]);
-            normalIndices.push_back(normalIndex[0]);
-            normalIndices.push_back(normalIndex[1]);
-            normalIndices.push_back(normalIndex[2]);
-            normalIndices.push_back(normalIndex[3]);
+
+            //vertexIndices.push_back(vertexIndex[0]);
+            //vertexIndices.push_back(vertexIndex[1]);
+            //vertexIndices.push_back(vertexIndex[2]);
+            //vertexIndices.push_back(vertexIndex[3]);
+            //normalIndices.push_back(normalIndex[0]);
+            //normalIndices.push_back(normalIndex[1]);
+            //normalIndices.push_back(normalIndex[2]);
+            //normalIndices.push_back(normalIndex[3]);
+
+            // Store normals for each vertex
+            for (int i = 0; i < 4; ++i) {
+                vertex_to_normals[vertexIndex[i] - 1].push_back(temp_normals[normalIndex[i] - 1]);
+                vertexIndices.push_back(vertexIndex[i]);
+            }
+
         }else{
             // Probably a comment, eat up the rest of the line
             char stupidBuffer[1000];
@@ -70,21 +81,40 @@ bool loadQuadOBJ(const char * path, std::vector<glm::vec3> &out_vertices, std::v
 
     }
 
-    // For each vertex of each quad
-    for( unsigned int i=0; i<vertexIndices.size(); i++ ){
 
-        // Get the indices of its attributes
-        unsigned int vertexIndex = vertexIndices[i];
-        unsigned int normalIndex = normalIndices[i];
+    //// For each vertex of each quad
+    //for( unsigned int i=0; i<vertexIndices.size(); i++ ){
 
-        // Get the attributes thanks to the index
-        glm::vec3 vertex = temp_vertices[ vertexIndex-1 ];
-        glm::vec3 normal = temp_normals[ normalIndex-1 ];
+    //    // Get the indices of its attributes
+    //    unsigned int vertexIndex = vertexIndices[i];
+    //    unsigned int normalIndex = normalIndices[i];
 
-        // Put the attributes in buffers
-        out_vertices.push_back(vertex);
-        out_normals .push_back(normal);
+    //    // Get the attributes thanks to the index
+    //    glm::vec3 vertex = temp_vertices[ vertexIndex-1 ];
+    //    glm::vec3 normal = temp_normals[ normalIndex-1 ];
 
+    //    // Put the attributes in buffers
+    //    out_vertices.push_back(vertex);
+    //    out_normals .push_back(normal);
+
+    //}
+
+
+    // Average the normals
+    for (const auto& [vertexIndex, vertexNormals] : vertex_to_normals) {
+        glm::vec3 sum(0.0f);
+        for (const glm::vec3& normal : vertexNormals) {
+            sum += glm::normalize(normal);
+        }
+        glm::vec3 averagedNormal = glm::normalize(sum / static_cast<float>(vertexNormals.size()));
+
+        // Update all vertices with this index
+        for (auto& vertexIndex : vertexIndices) {
+            if (vertexIndex == vertexIndex) {
+                out_normals.push_back(averagedNormal);
+                out_vertices.push_back(temp_vertices[vertexIndex - 1]);
+            }
+        }
     }
 
     return true;
@@ -114,7 +144,7 @@ static AABB load_obj(const std::string &filename, const std::string &base_dir, s
     }
 
     //< There is a bug here: err may contain multiple '\n' terminated string
-    //< Yaochuang's Plan: Research how to output multiple line log by spdlog
+    //< Research how to output multiple line log by spdlog
     if (!err.empty())
         printf("%s", err.c_str());
 
@@ -123,6 +153,10 @@ static AABB load_obj(const std::string &filename, const std::string &base_dir, s
     //< is this macro: FLT_MAX OS dependent ?
     //< should always prefer os independent ones
     glm::vec3 pmin(FLT_MAX), pmax(-FLT_MAX);
+
+
+    // Additional data structure for storing the adjacency information
+    std::map<int, std::vector<glm::vec3>> vertex_to_normals;
 
     // Loop over shapes
     for (const auto &shape : shapes)
@@ -141,6 +175,8 @@ static AABB load_obj(const std::string &filename, const std::string &base_dir, s
 
                 meshes.at(mat).vertices.emplace_back(); //< use "material id" to index mesh : mesh <--> material id is one-one map
                 auto &vert = meshes.at(mat).vertices.back();
+                vert.vertex_index = index.vertex_index;
+
                 vert.position =
                 {
                         attrib.vertices[3 * index.vertex_index + 0],
@@ -153,12 +189,13 @@ static AABB load_obj(const std::string &filename, const std::string &base_dir, s
                 if (~index.normal_index) //< -1 == 0xFFFFFFFF, it is equal to if (index.normal_index != -1)
                 {
 
-                    vert.normal =
+                    glm::vec3 normal =
                     {
                         attrib.normals[3 * index.normal_index + 0],
                         attrib.normals[3 * index.normal_index + 1],
                         attrib.normals[3 * index.normal_index + 2]
                     };
+                    vertex_to_normals[index.vertex_index].push_back(normal);
                 }
                 else
                 {
@@ -171,6 +208,25 @@ static AABB load_obj(const std::string &filename, const std::string &base_dir, s
             face++;
         }
     }
+
+    // Average the normals
+    for (auto& mesh : meshes) {
+        for (const auto& [vertexIndex, vertexNormals] : vertex_to_normals) {
+            glm::vec3 sum(0.0f);
+            for (const glm::vec3& normal : vertexNormals) {
+                sum += glm::normalize(normal);
+            }
+            glm::vec3 averagedNormal = glm::normalize(sum / static_cast<float>(vertexNormals.size()));
+
+            // Update all vertices with this index
+            for (auto& vert : mesh.vertices) {
+                if (vert.vertex_index == vertexIndex) {
+                    vert.normal = averagedNormal;
+                }
+            }
+        }
+    }
+
 
     aabb.Extend(pmin);
     aabb.Extend(pmax);
@@ -235,9 +291,10 @@ static AABB load_obj(const std::string &filename, const std::string &base_dir, s
             glEnableVertexAttribArray(0);
             glEnableVertexAttribArray(1);
 
-            for (const auto& vertex : m_meshes[i].vertices) {
-                std::cout << "Normal: (" << vertex.normal.x << ", " << vertex.normal.y << ", " << vertex.normal.z << ")" << std::endl;
-            }
+            // Print the normal of each vertex
+            //for (const auto& vertex : m_meshes[i].vertices) {
+            //    std::cout << "Normal: (" << vertex.normal.x << ", " << vertex.normal.y << ", " << vertex.normal.z << ")" << std::endl;
+            //}
 
             glBindVertexArray(0);
 
