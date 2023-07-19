@@ -17,6 +17,8 @@
 #include "event_handler.h" 
 #include "gui.h"
 
+#include "silhouette.h" 
+
 #include <chrono>
 #include <thread>
 
@@ -101,15 +103,14 @@ void Viewer::animateCamera(Camera &camera)
             break;
         }
     }
-
 }
 
-void Viewer::render(const MeshBin & m_meshBin, const Camera &m_camera)
+void Viewer::render(MeshBin & m_meshBin, Camera &m_camera)
 {
     glm::mat4 gViewMatrix = m_camera.viewMatrix();
     glm::mat4 gProjectionMatrix = m_camera.projMatrix();
     glm::vec3 lightPos = glm::vec3(20.0f, 20.0f, 20.0f);
-    glm::vec3 mesh_color = glm::vec3(0.9f, 0.5f, 3.0f);
+    glm::vec3 mesh_color = glm::vec3(0.5f, 0.8f, 1.0f);
     glm::mat4x4 modelMatrix = glm::mat4(1.0);
 
 #if defined(MSAA_ENABLE)
@@ -131,6 +132,11 @@ void Viewer::render(const MeshBin & m_meshBin, const Camera &m_camera)
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
     }
 
+    if (m_option.gouraudshading)
+    {
+
+    }
+
     for (int i = 0; i < m_meshBin.size(); ++i)
     {
         if(!m_setting.enableTess)
@@ -145,11 +151,6 @@ void Viewer::render(const MeshBin & m_meshBin, const Camera &m_camera)
 
             glBindVertexArray(m_meshBin.vao(i));
             glDrawArrays(GL_TRIANGLES, 0, m_meshBin.vertex_num(i));
-
-            if (m_setting.enableSilhou)
-            {
-
-            }
         }
         else
         {
@@ -167,14 +168,25 @@ void Viewer::render(const MeshBin & m_meshBin, const Camera &m_camera)
                 glBindVertexArray(m_meshBin.vao(i));
                 glDrawArrays(GL_PATCHES, 0, m_meshBin.vertex_num(i));
 
-                if (m_setting.enableSilhou)
-                {
-
-                }
-
             }
         }
+
+        if (m_setting.enableSilhou)
+        {
+            createSilh(m_camera, m_meshBin);
+
+            glUseProgram(silhouProgramID);
+
+            glUniformMatrix4fv(silhViewMatrixID, 1, GL_FALSE, &gViewMatrix[0][0]);
+            glUniformMatrix4fv(silhProjectionMatrixID, 1, GL_FALSE, &gProjectionMatrix[0][0]);
+            glUniformMatrix4fv(silhModelMatrixID, 1, GL_FALSE, &modelMatrix[0][0]);
+           
+            glBindVertexArray(m_meshBin.sil_vao(i));
+            glDrawArrays(GL_LINE_STRIP, 0, m_meshBin.silvertex_num(i));
+        }
+
     }
+
     glBindVertexArray(0);
     glUseProgram(0);
 
@@ -200,8 +212,10 @@ void Viewer::render(const MeshBin & m_meshBin, const Camera &m_camera)
 void Viewer::initOpenGLShaders()
 {
     programID = loadStandardShaders("shaders/Standard.vert.glsl", "shaders/Standard.frag.glsl");
+    silhouProgramID = loadSilhouShaders("shaders/Silhou.vert.glsl", "shaders/Silhou.frag.glsl");
     tessProgramID = loadTessShaders("shaders/Tessellation.vs.glsl", "shaders/Tessellation.tc.glsl", "shaders/Tessellation.te.glsl", "shaders/Tessellation.fs.glsl");
 
+    // standard
     matrixID = glGetUniformLocation(programID, "MVP");
     modelMatrixID = glGetUniformLocation(programID, "M");
     viewMatrixID = glGetUniformLocation(programID, "V");
@@ -209,14 +223,21 @@ void Viewer::initOpenGLShaders()
     lightID = glGetUniformLocation(programID, "lightPosition_worldspace");
     mesh_color_ID = glGetUniformLocation(programID, "mesh_color");
 
+    // silhouette
+    silhMatrixID = glGetUniformLocation(silhouProgramID, "MVP");
+    silhModelMatrixID = glGetUniformLocation(silhouProgramID, "M");
+    silhViewMatrixID = glGetUniformLocation(silhouProgramID, "V");
+    silhProjectionMatrixID = glGetUniformLocation(silhouProgramID, "P");
+    silhLightID = glGetUniformLocation(silhouProgramID, "lightPosition_worldspace");
+    silh_mesh_color_ID = glGetUniformLocation(silhouProgramID, "mesh_color");
+
+    // tess
     tessModelMatrixID = glGetUniformLocation(tessProgramID, "M");
     tessViewMatrixID = glGetUniformLocation(tessProgramID, "V");
     tessProjectionMatrixID = glGetUniformLocation(tessProgramID, "P");
     tessLightID = glGetUniformLocation(tessProgramID, "lightPosition_worldspace");
-
-    tessellationLevelID = glGetUniformLocation(tessProgramID, "tessellationLevel");
-
     tess_mesh_color_ID = glGetUniformLocation(tessProgramID, "mesh_color");
+    tessellationLevelID = glGetUniformLocation(tessProgramID, "tessellationLevel");
 
 }
 
@@ -346,6 +367,7 @@ static void drawUI(Viewer &viewer)
         if (ImGui::BeginMenu(ICON_FA_EYE " View"))
         {
             ImGui::Checkbox("Wireframe", &displayOption.wireframe);
+            ImGui::Checkbox("Gouraud shading", &displayOption.gouraudshading);
             ImGui::Checkbox("ShowUI", &displayOption.showUI);
             ImGui::EndMenu();
         }

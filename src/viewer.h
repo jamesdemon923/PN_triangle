@@ -51,9 +51,10 @@ private:
 private:
 
     GLuint programID;
+    GLuint silhouProgramID;
     GLuint tessProgramID;
 
-
+    // standard
     GLuint lightID;
     GLuint matrixID;
     GLuint modelMatrixID;
@@ -61,8 +62,16 @@ private:
     GLuint projectionMatrixID;
     GLuint mesh_color_ID;
 
-    GLuint tessLightID;
+    // silhouette
+    GLuint silhLightID;
+    GLuint silhMatrixID;
+    GLuint silhModelMatrixID;
+    GLuint silhViewMatrixID;
+    GLuint silhProjectionMatrixID;
+    GLuint silh_mesh_color_ID;
 
+    // tess
+    GLuint tessLightID;
     GLuint tess_mesh_color_ID;
     GLuint tessMatrixID;
     GLuint tessModelMatrixID;
@@ -106,7 +115,7 @@ private:
     std::string m_objPath;
     int initWindow(void);
     void initOpenGLShaders(void);
-    void render(const MeshBin & m_meshBin, const Camera &m_camera);
+    void render(MeshBin & m_meshBin, Camera &m_camera);
     void animateCamera(Camera &m_camera);
     void animateTessellation();
 };

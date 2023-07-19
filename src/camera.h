@@ -31,7 +31,7 @@ public:
     void zoom(float delta);
     void pan(glm::vec2 delta);
     void reset();
-
+    
     void setAxis(OrbitAxis axis);
 
     glm::vec2 azel() const;
@@ -59,7 +59,6 @@ protected:
     glm::vec3 m_up;
     glm::vec3 m_right;
     glm::vec3 m_forward; //< newly added
-
 
     //< use RH coordinate
     glm::mat4 m_viewMatrix{1.f};

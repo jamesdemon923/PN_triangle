@@ -120,7 +120,7 @@ bool loadQuadOBJ(const char * path, std::vector<glm::vec3> &out_vertices, std::v
     return true;
 }
 
-static AABB load_obj(const std::string &filename, const std::string &base_dir, std::vector<Mesh> &meshes)
+static AABB load_obj(const std::string &filename, const std::string &base_dir, std::vector<Mesh> &meshes, std::vector<Mesh>& silh)
 {
 
     std::stringstream ss;
@@ -157,6 +157,8 @@ static AABB load_obj(const std::string &filename, const std::string &base_dir, s
 
     // Additional data structure for storing the adjacency information
     std::map<int, std::vector<glm::vec3>> vertex_to_normals;
+
+    std::vector<SimpleVertex> silh_vertices;
 
     // Loop over shapes
     for (const auto &shape : shapes)
@@ -195,6 +197,8 @@ static AABB load_obj(const std::string &filename, const std::string &base_dir, s
                         attrib.normals[3 * index.normal_index + 1],
                         attrib.normals[3 * index.normal_index + 2]
                     };
+
+
                     vertex_to_normals[index.vertex_index].push_back(normal);
                 }
                 else
@@ -202,7 +206,6 @@ static AABB load_obj(const std::string &filename, const std::string &base_dir, s
                     throw std::runtime_error("No normal channel found in vertex");
                     return aabb;
                 }
-
             }
             index_offset += num_face_vertex;
             face++;
@@ -222,10 +225,15 @@ static AABB load_obj(const std::string &filename, const std::string &base_dir, s
             for (auto& vert : mesh.vertices) {
                 if (vert.vertex_index == vertexIndex) {
                     vert.normal = averagedNormal;
+                    silh_vertices.push_back(vert);
                 }
             }
         }
     }
+    Mesh silhou;
+    silhou.vertices = silh_vertices;
+    silh.push_back(silhou);
+
 
 
     aabb.Extend(pmin);
@@ -262,8 +270,16 @@ static AABB load_obj(const std::string &filename, const std::string &base_dir, s
     MeshBin::MeshBin(const std::string &filename)
         : m_max_object_num(256)
     {
-        m_aabb = load_obj(filename, "Model/", m_meshes);
+        m_aabb = load_obj(filename, "Model/", m_meshes, m_silh);
         create_vaos();
+        sil_create_vaos(updateSil);
+    }
+
+    void MeshBin::update_silhouette(std::vector<Mesh>& new_silh)
+    {
+        updateSil = true;
+        m_silh = new_silh;
+        sil_create_vaos(updateSil);
     }
 
     void MeshBin::create_vaos()
@@ -291,11 +307,6 @@ static AABB load_obj(const std::string &filename, const std::string &base_dir, s
             glEnableVertexAttribArray(0);
             glEnableVertexAttribArray(1);
 
-            // Print the normal of each vertex
-            //for (const auto& vertex : m_meshes[i].vertices) {
-            //    std::cout << "Normal: (" << vertex.normal.x << ", " << vertex.normal.y << ", " << vertex.normal.z << ")" << std::endl;
-            //}
-
             glBindVertexArray(0);
 
             errorCheckValue = glGetError();
@@ -304,6 +315,51 @@ static AABB load_obj(const std::string &filename, const std::string &base_dir, s
                 fprintf(stderr, "Error: Could not create a VBO: %s\n", gluErrorString(errorCheckValue));
             }
             m_object_num++;
+        }
+    }
+
+    void MeshBin::sil_create_vaos(bool updateSil)
+    {
+        for (int i = 0; i < m_silh.size(); ++i)
+        {
+            GLenum errorCheckValue = glGetError();
+
+            if (updateSil)
+            {
+                glDeleteBuffers(1, &sil_vbo_id[m_silh_num]);
+                glDeleteVertexArrays(1, &sil_vao_id[m_silh_num]);
+                m_silh_num--;
+            }
+
+            sil_vb_size[m_silh_num] = m_silh[i].vertices.size() * sizeof(SimpleVertex);
+            sil_vertex_num[m_silh_num] = m_silh[i].vertices.size();
+
+            std::cout << "The number of the silhouette vertices is " << sil_vertex_num[m_silh_num] << std::endl;
+
+            const size_t vertexStride = sizeof(SimpleVertex);
+            const size_t normalOffset = sizeof(m_silh[i].vertices[0].position);
+
+            glGenVertexArrays(1, &sil_vao_id[m_silh_num]);
+            glBindVertexArray(sil_vao_id[m_silh_num]);
+
+            glGenBuffers(1, &sil_vbo_id[m_silh_num]);
+            glBindBuffer(GL_ARRAY_BUFFER, sil_vbo_id[m_silh_num]);
+            glBufferData(GL_ARRAY_BUFFER, sil_vb_size[m_silh_num], m_silh[i].vertices.data(), GL_STATIC_DRAW);
+
+            glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, vertexStride, 0); // Position
+            glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, vertexStride, (GLvoid*)normalOffset); // Normal
+
+            glEnableVertexAttribArray(0);
+            glEnableVertexAttribArray(1);
+
+            glBindVertexArray(0);
+
+            errorCheckValue = glGetError();
+            if (errorCheckValue != GL_NO_ERROR)
+            {
+                fprintf(stderr, "Error: Could not create a VBO: %s\n", gluErrorString(errorCheckValue));
+            }
+            m_silh_num++;
         }
     }
 

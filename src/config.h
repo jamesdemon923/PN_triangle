@@ -25,9 +25,11 @@ struct DisplayOption
 {
     bool wireframe;
     bool showUI;
+    bool gouraudshading;
 
     DisplayOption()
         : wireframe(false)
+        , gouraudshading(false)
         , showUI(true)
     { }
 };
