@@ -234,8 +234,6 @@ static AABB load_obj(const std::string &filename, const std::string &base_dir, s
     silhou.vertices = silh_vertices;
     silh.push_back(silhou);
 
-
-
     aabb.Extend(pmin);
     aabb.Extend(pmax);
 
@@ -306,6 +304,10 @@ static AABB load_obj(const std::string &filename, const std::string &base_dir, s
 
             glEnableVertexAttribArray(0);
             glEnableVertexAttribArray(1);
+
+            for (const auto& vertex : m_meshes[i].vertices) {
+                std::cout << "Normal: (" << vertex.normal.x << ", " << vertex.normal.y << ", " << vertex.normal.z << ")" << std::endl;
+            }
 
             glBindVertexArray(0);
 

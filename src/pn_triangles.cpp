@@ -23,7 +23,7 @@ int main(int argc, char **argv)
     }
     else
     {
-        modelPath = "Model/octahedron.obj";
+        modelPath = "Model/boat.obj";
     }
 
     Viewer viewer{"Viewer", 1280, 720};

@@ -13,7 +13,7 @@ void createSilh(Camera& camera, MeshBin& mesh) {
 	for (int i = 0; i < m_silh[0].vertices.size(); i++) {
 		float dotProduct = glm::dot(m_silh[0].vertices[i].normal, came_dir);
 		//std::cout << "x is " << m_silh[0].vertices[i].normal.x << "\ny is " << m_silh[0].vertices[i].normal.y << "\nz is " << m_silh[0].vertices[i].normal.z << std::endl;
-		if (m_silh[0].vertices[i].normal.z == 0.0f) {
+		if (dotProduct == 0.0f) {
 			new_silhou.vertices.push_back(m_silh[0].vertices[i]);
 		}
 	}
@@ -23,5 +23,5 @@ void createSilh(Camera& camera, MeshBin& mesh) {
 		new_m_silh.push_back(new_silhou);
 		mesh.update_silhouette(new_m_silh);
 	}
-	//std::cout << "x is " << came_dir.x << "\ny is " << came_dir.y << "\nz is " << came_dir.z << std::endl;
+	std::cout << "x is " << came_dir.x << "\ny is " << came_dir.y << "\nz is " << came_dir.z << std::endl;
 }
