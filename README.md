@@ -21,7 +21,7 @@ Implement PN Triangle tessellation by OpenGL .
 - Key 'w': toggle wireframe 
 
 ## Screen 
-- ![screen](./images/wireframe.png)
+- ![screen](./images/result.gif)
 
 ## Credits
 - [glew]()
